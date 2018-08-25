@@ -1,5 +1,6 @@
 
 import matplotlib.pyplot as plt
+# if we want to save fig, otherwise- remove this line:
 plt.switch_backend('agg')
 
 # =============================================================================

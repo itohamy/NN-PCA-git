@@ -10,12 +10,14 @@ import matplotlib.pyplot as plt
 class DataProvider:
 
     def __init__(self, video_name):
+
         # self.config = config
         self.feed_path = "Data"
 
         # load data from video
         makedir(self.feed_path)
         feed_size = extractImages(video_name, self.feed_path)
+        #feed_size = 8900
 
         self.train_size = int(0.8 * feed_size)
         self.test_size = feed_size - self.train_size
@@ -26,6 +28,7 @@ class DataProvider:
         count = 1
         for img_str in files:
             I = cv2.imread(img_str, 0)
+            I = I/255
             I = cv2.resize(I, (128, 128))  # change to (512, 512)
             I = np.atleast_3d(I)
             if count <= self.train_size:

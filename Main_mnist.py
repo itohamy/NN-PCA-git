@@ -12,8 +12,8 @@ from PIL import Image
 #from resizeimage import resizeimage
 from Plots import open_figure, PlotImages
 
-batch_size = 500  # Number of samples in each batch
-epoch_num = 1    # Number of epochs to train the network
+batch_size = 64  # Number of samples in each batch
+epoch_num = 1   # Number of epochs to train the network
 lr = 0.001        # Learning rate
 
 
@@ -49,6 +49,7 @@ def autoencoder(inputs):
 
 
 def train():
+
     # read MNIST dataset
     mnist = input_data.read_data_sets("MNIST_data", one_hot=True)
 
@@ -69,7 +70,7 @@ def train():
     with tf.Session() as sess:
         sess.run(init)
         for ep in range(epoch_num):  # epochs loop
-            for batch_n in range(batch_per_ep):  # batches loop
+            for batch_n in range(1000):  # range(batch_per_ep):  # batches loop
                 batch_img, batch_label = mnist.train.next_batch(batch_size)  # read a batch
                 batch_img = batch_img.reshape((-1, 28, 28, 1))               # reshape each sample to an (28, 28) image
                 batch_img = resize_batch(batch_img)                          # reshape the images to (32, 32)

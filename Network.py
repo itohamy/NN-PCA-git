@@ -10,7 +10,7 @@ class FusionNet(object):
     def __init__(self):
         self.act_fn = acts.pRelu
         self.kernel_num = 32
-        self.output_dim = 3
+        self.output_dim = 1
         self.log = 1
         print("FusionNet Loading"),
 

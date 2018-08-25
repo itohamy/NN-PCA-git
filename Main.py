@@ -1,6 +1,6 @@
 # An undercomplete autoencoder on MNIST dataset
 from __future__ import division, print_function, absolute_import
-from data_provider.data_provider import DataProvider
+from data_provider import DataProvider
 import tensorflow as tf
 import numpy as np
 import matplotlib.pyplot as plt
@@ -9,8 +9,8 @@ from Network import Network
 
 batch_size = 64  # Number of samples in each batch
 test_batch_size = 30  # Number of samples to test
-epoch_num = 5    # Number of epochs to train the network
-lr = 0.0001        # Learning rate
+epoch_num = 1    # Number of epochs to train the network
+lr = 0.001        # Learning rate
 
 
 def train():
@@ -24,8 +24,9 @@ def train():
 
     # calculate the number of batches per epoch
     batch_per_ep = data.train_size // batch_size
+    # print('Data size: ', data.train_size, ' Num of epochs: ', epoch_num, ' Batches per epoch: ', batch_per_ep)
 
-    ae_inputs = tf.placeholder(tf.float32, (None, 128, 128, 1))  # input to the network (MNIST images)
+    ae_inputs = tf.placeholder(tf.float32, (batch_size, 128, 128, 1))  # input to the network (MNIST images)
     ae_outputs = net.autoencoder(ae_inputs) # net.build(ae_inputs) # create the Autoencoder network
 
     # calculate the loss and optimize the network
@@ -38,7 +39,7 @@ def train():
     with tf.Session() as sess:
         sess.run(init)
         for ep in range(epoch_num):  # epochs loop
-            for i in range(batch_per_ep):  # batches loop
+            for i in range(100):  # batches loop
                 # read a batch -> batch_img
                 batch_img = data.next_batch(batch_size, 'train')
                 # print("batch size: ", batch_img.shape)
