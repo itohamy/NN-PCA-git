@@ -8,7 +8,6 @@ from Plots import open_figure, PlotImages
 from Network import Network
 
 batch_size = 64  # Number of samples in each batch
-test_batch_size = 30  # Number of samples to test
 epoch_num = 1    # Number of epochs to train the network
 lr = 0.001        # Learning rate
 
@@ -19,27 +18,29 @@ def train():
     video_name = "movies/BG.mp4"
     data = DataProvider(video_name)
 
-    # build the network
-    net = Network()
+    device = '/cpu:0' # '/gpu:0'
+    with tf.device(device):
+        # build the network
+        net = Network()
 
-    # calculate the number of batches per epoch
-    batch_per_ep = data.train_size // batch_size
-    # print('Data size: ', data.train_size, ' Num of epochs: ', epoch_num, ' Batches per epoch: ', batch_per_ep)
+        # calculate the number of batches per epoch
+        batch_per_ep = data.train_size // batch_size
+        # print('Data size: ', data.train_size, ' Num of epochs: ', epoch_num, ' Batches per epoch: ', batch_per_ep)
 
-    ae_inputs = tf.placeholder(tf.float32, (batch_size, 128, 128, 1))  # input to the network (MNIST images)
-    ae_outputs = net.autoencoder(ae_inputs) # net.build(ae_inputs) # create the Autoencoder network
+        ae_inputs = tf.placeholder(tf.float32, (batch_size, 128, 128, 1))  # input to the network
+        ae_outputs = net.autoencoder(ae_inputs) # net.build(ae_inputs) or net.autoencoder(ae_inputs) # create the Autoencoder network
 
-    # calculate the loss and optimize the network
-    loss = tf.reduce_mean(tf.square(ae_outputs - ae_inputs))  # claculate the mean square error loss
-    train_op = tf.train.AdamOptimizer(learning_rate=lr).minimize(loss)
+        # calculate the loss and optimize the network
+        loss = tf.reduce_mean(tf.square(ae_outputs - ae_inputs))  # claculate the mean square error loss
+        train_op = tf.train.AdamOptimizer(learning_rate=lr).minimize(loss)
 
-    # initialize the network
-    init = tf.global_variables_initializer()
+        # initialize the network
+        init = tf.global_variables_initializer()
 
     with tf.Session() as sess:
         sess.run(init)
         for ep in range(epoch_num):  # epochs loop
-            for i in range(100):  # batches loop
+            for i in range(10000):  # batches loop
                 # read a batch -> batch_img
                 batch_img = data.next_batch(batch_size, 'train')
                 # print("batch size: ", batch_img.shape)
@@ -48,14 +49,14 @@ def train():
                     print('Epoch {0}: Iteration: {1} Loss: {2:.5f}'.format((ep + 1), i, c))
 
         # test the trained network
-        batch_img = data.next_batch(test_batch_size, 'test')
+        batch_img = data.next_batch(batch_size, 'test')
         test_results = sess.run([ae_outputs], feed_dict={ae_inputs: batch_img})[0]
 
         # plot the reconstructed images and their ground truths (inputs)
         imgs = []
         imgs_test = []
         titles = []
-        for i in range(test_batch_size):
+        for i in range(30):
             imgs.append(batch_img[i, ..., 0])
             imgs_test.append(test_results[i,...,0])
             titles.append('')
