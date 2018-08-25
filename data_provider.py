@@ -15,9 +15,9 @@ class DataProvider:
         self.feed_path = "Data"
 
         # load data from video
-        makedir(self.feed_path)
-        feed_size = extractImages(video_name, self.feed_path)
-        #feed_size = 8900
+        #makedir(self.feed_path)
+        #feed_size = extractImages(video_name, self.feed_path)
+        feed_size = 8900
 
         self.train_size = int(0.8 * feed_size)
         self.test_size = feed_size - self.train_size
@@ -27,9 +27,10 @@ class DataProvider:
         files = glob.glob(self.feed_path + "/*.jpg")
         count = 1
         for img_str in files:
-            I = cv2.imread(img_str, 0)
-            I = I/255
+            I = cv2.imread(img_str)
+            I = cv2.cvtColor(I, cv2.COLOR_BGR2RGB)
             I = cv2.resize(I, (128, 128))  # change to (512, 512)
+            I = I / 255.
             I = np.atleast_3d(I)
             if count <= self.train_size:
                 self.train.append(I)
@@ -39,6 +40,7 @@ class DataProvider:
         self.train = np.array(self.train)
         self.test = np.array(self.test)
         print('Finished uploading data, Train data shape:', self.train.shape, '; Test data shape:', self.test.shape)
+
 
     def next_batch(self, batch_size, data_type):
         batch_img = None

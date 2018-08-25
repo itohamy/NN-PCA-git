@@ -10,7 +10,7 @@ class FusionNet(object):
     def __init__(self):
         self.act_fn = acts.pRelu
         self.kernel_num = 32
-        self.output_dim = 1
+        self.output_dim = 3
         self.log = 1
         print("FusionNet Loading"),
 
@@ -121,11 +121,11 @@ class Network():
         pass
 
     def build(self, input_batch):
-        new_input = tf.reshape(input_batch, [-1, 128, 128, 1])
+        new_input = tf.reshape(input_batch, [-1, 128, 128, 3])
         fusionNet = FusionNet()
         out = fusionNet.inference(new_input)
         print("out:", out.shape)
-        return tf.reshape(out,[-1,128,128,1])
+        return tf.reshape(out,[-1,128,128,3])
     
     def autoencoder(self, inputs):
         # # encoder
@@ -142,16 +142,16 @@ class Network():
         # net = lays.conv2d_transpose(net, 1, [5, 5], stride=2, padding='SAME', activation_fn=tf.nn.tanh)
 
         # encoder
-        # 128 x 128 x 1  ->  64 x 64 x 32  ->  32 x 32 x 16  ->  16 x 16 x 8  -> 4 x 4 x 8
+        # 128 x 128 x 3  ->  64 x 64 x 32  ->  32 x 32 x 16  ->  16 x 16 x 8  -> 4 x 4 x 8
         net = lays.conv2d(inputs, 32, [5, 5], stride=2, padding='SAME')
         net = lays.conv2d(net, 16, [5, 5], stride=2, padding='SAME')
         net = lays.conv2d(net, 8, [5, 5], stride=2, padding='SAME')
         net = lays.conv2d(net, 8, [5, 5], stride=4, padding='SAME')
         # decoder
-        # 4 x 4 x 8  ->  16 x 16 x 8  ->  32 x 32 x 16  ->  64 x 64 x 32  ->  128 x 128 x 1
+        # 4 x 4 x 8  ->  16 x 16 x 8  ->  32 x 32 x 16  ->  64 x 64 x 32  ->  128 x 128 x 3
         net = lays.conv2d_transpose(net, 8, [5, 5], stride=4, padding='SAME')
         net = lays.conv2d_transpose(net, 16, [5, 5], stride=2, padding='SAME')
         net = lays.conv2d_transpose(net, 32, [5, 5], stride=2, padding='SAME')
-        net = lays.conv2d_transpose(net, 1, [5, 5], stride=2, padding='SAME', activation_fn=tf.nn.tanh)
+        net = lays.conv2d_transpose(net, 3, [5, 5], stride=2, padding='SAME', activation_fn=tf.nn.tanh)
 
         return net
