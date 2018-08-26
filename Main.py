@@ -10,7 +10,7 @@ from Network import Network
 batch_size = 64  # Number of samples in each batch
 epoch_num = 1    # Number of epochs to train the network
 lr = 0.001        # Learning rate
-iterations = 10000
+iterations = 3000
 
 def train():
 
@@ -50,6 +50,9 @@ def train():
 
         # test the trained network
         batch_img = data.next_batch(batch_size, 'test')
+        batch_img[0, ...] = generate_outliers(batch_img[0,...], 20, 60)
+        batch_img[4,...] = generate_outliers(batch_img[4,...],50,80)
+        batch_img[7,...] = generate_outliers(batch_img[7,...],40,110)
         test_results = sess.run([ae_outputs], feed_dict={ae_inputs: batch_img})[0]
 
         # plot the reconstructed images and their ground truths (inputs)
@@ -68,6 +71,16 @@ def train():
         plt.show()
         fig1.savefig('f1.png')
         fig2.savefig('f2.png')
+
+
+def generate_outliers(X, s, e):
+    X_o = np.reshape(X, X.shape)
+    start_idx = np.array([s, s])
+    end_idx = np.array([e, e])
+    for i in range(start_idx[0], end_idx[0]):
+        for j in range(start_idx[1], end_idx[1]):
+            X_o[i][j] = 0 #np.random.random_integers(0, 1)
+    return X_o
 
 
 if __name__ == '__main__':
