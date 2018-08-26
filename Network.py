@@ -142,14 +142,16 @@ class Network():
         # net = lays.conv2d_transpose(net, 1, [5, 5], stride=2, padding='SAME', activation_fn=tf.nn.tanh)
 
         # encoder
-        # 128 x 128 x 3  ->  64 x 64 x 32  ->  32 x 32 x 16  ->  16 x 16 x 8  -> 4 x 4 x 8
+        # 128 x 128 x 3  ->  64 x 64 x 32  ->  32 x 32 x 16  ->  16 x 16 x 8 ->  8 x 8 x 4 -> 2 x 2 x 2
         net = lays.conv2d(inputs, 32, [5, 5], stride=2, padding='SAME')
         net = lays.conv2d(net, 16, [5, 5], stride=2, padding='SAME')
         net = lays.conv2d(net, 8, [5, 5], stride=2, padding='SAME')
-        net = lays.conv2d(net, 8, [5, 5], stride=4, padding='SAME')
+        net = lays.conv2d(net, 4, [5, 5], stride=2, padding='SAME')
+        net = lays.conv2d(net, 2, [5, 5], stride=4, padding='SAME')
         # decoder
-        # 4 x 4 x 8  ->  16 x 16 x 8  ->  32 x 32 x 16  ->  64 x 64 x 32  ->  128 x 128 x 3
-        net = lays.conv2d_transpose(net, 8, [5, 5], stride=4, padding='SAME')
+        # 2 x 2 x 2  ->  8 x 8 x 4  ->  16 x 16 x 8  ->  32 x 32 x 16  ->  64 x 64 x 32  ->  128 x 128 x 3
+        net = lays.conv2d_transpose(net, 4, [5, 5], stride=4, padding='SAME')
+        net = lays.conv2d_transpose(net, 8, [5, 5], stride=2, padding='SAME')
         net = lays.conv2d_transpose(net, 16, [5, 5], stride=2, padding='SAME')
         net = lays.conv2d_transpose(net, 32, [5, 5], stride=2, padding='SAME')
         net = lays.conv2d_transpose(net, 3, [5, 5], stride=2, padding='SAME', activation_fn=tf.nn.tanh)

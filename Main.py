@@ -10,7 +10,7 @@ from Network import Network
 batch_size = 64  # Number of samples in each batch
 epoch_num = 1    # Number of epochs to train the network
 lr = 0.001        # Learning rate
-iterations = 3000
+iterations = 100000
 
 def train():
 
@@ -28,7 +28,7 @@ def train():
         # print('Data size: ', data.train_size, ' Num of epochs: ', epoch_num, ' Batches per epoch: ', batch_per_ep)
 
         ae_inputs = tf.placeholder(tf.float32, (batch_size, 128, 128, 3))  # input to the network
-        ae_outputs = net.build(ae_inputs) # net.build(ae_inputs) or net.autoencoder(ae_inputs) # create the Autoencoder network
+        ae_outputs = net.autoencoder(ae_inputs) # net.build(ae_inputs) or net.autoencoder(ae_inputs) # create the Autoencoder network
 
         # calculate the loss and optimize the network
         loss = tf.reduce_mean(tf.square(ae_outputs - ae_inputs))  # claculate the mean square error loss
