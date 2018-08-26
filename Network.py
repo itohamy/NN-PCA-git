@@ -35,16 +35,16 @@ class FusionNet(object):
             return conv2
 
     def encoder(self, input_):
-        self.down1 = self.conv_res_conv_block(input_, self.kernel_num, name="down1")
+        self.down1 = self.conv_res_conv_block(input_, 32, name="down1")
         pool1 = layers.max_pool(self.down1, name="pool1")
 
-        self.down2 = self.conv_res_conv_block(pool1, self.kernel_num * 2, name="down2")
+        self.down2 = self.conv_res_conv_block(pool1, 16, name="down2")
         pool2 = layers.max_pool(self.down2, name="pool2")
 
-        self.down3 = self.conv_res_conv_block(pool2, self.kernel_num * 4, name="down3")
+        self.down3 = self.conv_res_conv_block(pool2, 8, name="down3")
         pool3 = layers.max_pool(self.down3, name="pool3")
 
-        self.down4 = self.conv_res_conv_block(pool3, self.kernel_num * 8, name="down4")
+        self.down4 = self.conv_res_conv_block(pool3, 4, name="down4")
         pool4 = layers.max_pool(self.down4, name="pool4")
 
         if self.log == 1:
@@ -65,22 +65,22 @@ class FusionNet(object):
         conv_trans4 = layers.conv2dTrans_same_act(input_, self.down4.get_shape(),
                                                   activation_fn=self.act_fn, with_logit=False, name="unpool4")
         res4 = self.skip_connection(conv_trans4, self.down4)
-        up4 = self.conv_res_conv_block(res4, self.kernel_num * 8, name="up4")
+        up4 = self.conv_res_conv_block(res4, 4, name="up4")
 
         conv_trans3 = layers.conv2dTrans_same_act(up4, self.down3.get_shape(),
                                                   activation_fn=self.act_fn, with_logit=False, name="unpool3")
         res3 = self.skip_connection(conv_trans3, self.down3)
-        up3 = self.conv_res_conv_block(res3, self.kernel_num * 4, name="up3")
+        up3 = self.conv_res_conv_block(res3, 8, name="up3")
 
         conv_trans2 = layers.conv2dTrans_same_act(up3, self.down2.get_shape(),
                                                   activation_fn=self.act_fn, with_logit=False, name="unpool2")
         res2 = self.skip_connection(conv_trans2, self.down2)
-        up2 = self.conv_res_conv_block(res2, self.kernel_num * 2, name="up2")
+        up2 = self.conv_res_conv_block(res2, 16, name="up2")
 
         conv_trans1 = layers.conv2dTrans_same_act(up2, self.down1.get_shape(),
                                                  activation_fn=self.act_fn, with_logit=False, name="unpool1")
         res1 = self.skip_connection(conv_trans1, self.down1)
-        up1 = self.conv_res_conv_block(res1, self.kernel_num, name="up1")
+        up1 = self.conv_res_conv_block(res1, 32, name="up1")
 
         if self.log == 1:
             print("dncoder input : ", input_.get_shape())
