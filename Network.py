@@ -101,7 +101,7 @@ class FusionNet(object):
 
     def inference(self, input_):
         encode_vec = self.encoder(input_)
-        bridge = self.conv_res_conv_block(encode_vec, self.kernel_num * 16, name="bridge")
+        bridge = self.conv_res_conv_block(encode_vec, 2, name="bridge")
         decode_vec = self.decoder(bridge)
         output = layers.bottleneck_layer(decode_vec, self.output_dim, name="output")
 
@@ -157,3 +157,37 @@ class Network():
         net = lays.conv2d_transpose(net, 3, [5, 5], stride=2, padding='SAME', activation_fn=tf.nn.tanh)
 
         return net
+
+    def autoencoder2(self, input_layer):
+        # encoder
+        n_nodes_inpl = 784
+        n_nodes_hl1 = 32
+        # decoder
+        n_nodes_hl2 = 32
+        n_nodes_outl = 784
+
+        # first hidden layer has 784*32 weights and 32 biases
+        hidden_1_layer_vals = {
+            'weights':tf.Variable(tf.random_normal([n_nodes_inpl,n_nodes_hl1])),
+            'biases':tf.Variable(tf.random_normal([n_nodes_hl1]))}
+        # second hidden layer has 32*32 weights and 32 biases
+        hidden_2_layer_vals = {
+            'weights':tf.Variable(tf.random_normal([n_nodes_hl1,n_nodes_hl2])),
+            'biases':tf.Variable(tf.random_normal([n_nodes_hl2]))}
+        # second hidden layer has 32*784 weights and 784 biases
+        output_layer_vals = {
+            'weights':tf.Variable(tf.random_normal([n_nodes_hl2,n_nodes_outl])),
+            'biases':tf.Variable(tf.random_normal([n_nodes_outl]))}
+
+        # image with shape 784 goes in
+
+        # multiply output of input_layer wth a weight matrix and add biases
+        layer_1 = tf.nn.sigmoid(
+            tf.add(tf.matmul(input_layer,hidden_1_layer_vals['weights']),hidden_1_layer_vals['biases']))
+        # multiply output of layer_1 wth a weight matrix and add biases
+        layer_2 = tf.nn.sigmoid(
+            tf.add(tf.matmul(layer_1,hidden_2_layer_vals['weights']),hidden_2_layer_vals['biases']))
+        # multiply output of layer_2 wth a weight matrix and add biases
+        output_layer = tf.matmul(layer_2,output_layer_vals['weights']) + output_layer_vals['biases']
+
+        return output_layer

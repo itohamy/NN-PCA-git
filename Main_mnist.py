@@ -77,10 +77,29 @@ def train():
                 _, c = sess.run([train_op, loss], feed_dict={ae_inputs: batch_img})
                 print('Epoch: {} - cost= {:.5f}'.format((ep + 1), c))
 
-        # test the trained network
+        # test the trained network, with outliers
         batch_img, batch_label = mnist.test.next_batch(50)
         batch_img = resize_batch(batch_img)
-        recon_img = sess.run([ae_outputs], feed_dict={ae_inputs: batch_img})[0]
+        batch_img[0,...] = generate_outliers(batch_img[0,...],4,10)
+        batch_img[4,...] = generate_outliers(batch_img[4,...],10,15)
+        batch_img[7,...] = generate_outliers(batch_img[7,...],10,25)
+        test_results = sess.run([ae_outputs], feed_dict={ae_inputs: batch_img})[0]
+
+        # test the trained network
+
+        imgs = []
+        imgs_test = []
+        titles = []
+        for i in range(30):
+            imgs.append(batch_img[i, ..., 0])
+            imgs_test.append(test_results[i,...,0])
+            titles.append('')
+        fig1 = open_figure(1, 'Original Images', (7, 5))
+        PlotImages(1, 3, 10, 1, imgs, titles, 'gray', axis=True, colorbar=False)
+        fig2 = open_figure(2, 'Test Results', (7, 5))
+        PlotImages(2, 3, 10, 1, imgs_test, titles, 'gray', axis=True, colorbar=False)
+        fig1.savefig('f1.png')
+        fig2.savefig('f2.png')
 
         # plot the reconstructed images and their ground truths (inputs)
         # fig1 = plt.figure(1)
@@ -100,19 +119,16 @@ def train():
         # fig2.savefig('f2.png')
 
         # plot the reconstructed images and their ground truths (inputs)
-        imgs = []
-        imgs_test = []
-        titles = []
-        for i in range(50):
-            imgs.append(batch_img[i, ..., 0])
-            imgs_test.append(recon_img[i,...,0])
-            titles.append('')
-        fig1 = open_figure(1, 'Original Images', (10, 5))
-        PlotImages(1, 5, 10, 1, imgs, titles, 'gray', axis=True, colorbar=False)
-        fig2 = open_figure(2, 'Test Results', (10, 5))
-        PlotImages(2, 5, 10, 1, imgs_test, titles, 'gray', axis=True, colorbar=False)
-        fig1.savefig('f1.png')
-        fig2.savefig('f2.png')
+
+
+def generate_outliers(X, s, e):
+    X_o = np.reshape(X, X.shape)
+    start_idx = np.array([s, s])
+    end_idx = np.array([e, e])
+    for i in range(start_idx[0], end_idx[0]):
+        for j in range(start_idx[1], end_idx[1]):
+            X_o[i][j] = 0 #np.random.random_integers(0, 1)
+    return X_o
 
 
 if __name__ == '__main__':

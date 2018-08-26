@@ -10,7 +10,7 @@ from Network import Network
 batch_size = 64  # Number of samples in each batch
 epoch_num = 1    # Number of epochs to train the network
 lr = 0.001        # Learning rate
-iterations = 3000
+iterations = 2
 
 def train():
 
@@ -18,7 +18,7 @@ def train():
     video_name = "movies/BG.mp4"
     data = DataProvider(video_name)
 
-    device = '/gpu:0' # '/gpu:0'  OR  '/cpu:0'
+    device = '/cpu:0' # '/gpu:0'  OR  '/cpu:0'
     with tf.device(device):
         # build the network
         net = Network()
@@ -79,7 +79,7 @@ def generate_outliers(X, s, e):
     end_idx = np.array([e, e])
     for i in range(start_idx[0], end_idx[0]):
         for j in range(start_idx[1], end_idx[1]):
-            X_o[i][j] = 0 #np.random.random_integers(0, 1)
+            X_o[i][j] = np.random.random_integers(0, 1)
     return X_o
 
 
