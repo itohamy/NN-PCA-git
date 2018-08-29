@@ -10,25 +10,26 @@ from Network import Network
 batch_size = 64  # Number of samples in each batch
 epoch_num = 1    # Number of epochs to train the network
 lr = 0.001        # Learning rate
-iterations = 2
+iterations = 20
+img_sz = 256
 
 def train():
 
     # Load data (frames) from video
     video_name = "movies/BG.mp4"
-    data = DataProvider(video_name)
+    data = DataProvider(video_name, img_sz)
 
-    device = '/cpu:0' # '/gpu:0'  OR  '/cpu:0'
+    device = '/gpu:0' # '/gpu:0'  OR  '/cpu:0'
     with tf.device(device):
         # build the network
-        net = Network()
+        net = Network(img_sz)
 
         # calculate the number of batches per epoch
         batch_per_ep = data.train_size // batch_size
         # print('Data size: ', data.train_size, ' Num of epochs: ', epoch_num, ' Batches per epoch: ', batch_per_ep)
 
-        ae_inputs = tf.placeholder(tf.float32, (batch_size, 128, 128, 3))  # input to the network
-        ae_outputs = net.build(ae_inputs) # net.build(ae_inputs) or net.autoencoder(ae_inputs) # create the Autoencoder network
+        ae_inputs = tf.placeholder(tf.float32, (batch_size, img_sz, img_sz, 3))  # input to the network
+        ae_outputs = net.simple2(ae_inputs) # fully_connected , unet , simple1 , simple2
 
         # calculate the loss and optimize the network
         loss = tf.reduce_mean(tf.square(ae_outputs - ae_inputs))  # claculate the mean square error loss

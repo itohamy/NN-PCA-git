@@ -6,6 +6,92 @@ import tensorflow.contrib.layers as lays
 BN_EPSILON = 0.001
 
 
+class Network():
+
+    training = tf.placeholder(tf.bool)
+
+    def __init__(self, img_sz):
+        self.img_sz = img_sz
+        pass
+
+    def unet(self, input_batch):
+        new_input = tf.reshape(input_batch, [-1, self.img_sz, self.img_sz, 3])
+        fusionNet = FusionNet()
+        out = fusionNet.inference(new_input)
+        print("out:", out.shape)
+        return tf.reshape(out, [-1, self.img_sz, self.img_sz, 3])
+
+    def simple1(self, inputs):
+        # encoder
+        # 128 x 128 x 3  ->  64 x 64 x 32  ->  32 x 32 x 16  ->  16 x 16 x 8 ->  8 x 8 x 4 -> 2 x 2 x 2
+        net = lays.conv2d(inputs, 32, [5, 5], stride=2, padding='SAME')
+        net = lays.conv2d(net, 16, [5, 5], stride=2, padding='SAME')
+        net = lays.conv2d(net, 8, [5, 5], stride=2, padding='SAME')
+        net = lays.conv2d(net, 4, [5, 5], stride=2, padding='SAME')
+        net = lays.conv2d(net, 2, [5, 5], stride=4, padding='SAME')
+        # decoder
+        # 2 x 2 x 2  ->  8 x 8 x 4  ->  16 x 16 x 8  ->  32 x 32 x 16  ->  64 x 64 x 32  ->  128 x 128 x 3
+        net = lays.conv2d_transpose(net, 4, [5, 5], stride=4, padding='SAME')
+        net = lays.conv2d_transpose(net, 8, [5, 5], stride=2, padding='SAME')
+        net = lays.conv2d_transpose(net, 16, [5, 5], stride=2, padding='SAME')
+        net = lays.conv2d_transpose(net, 32, [5, 5], stride=2, padding='SAME')
+        net = lays.conv2d_transpose(net, 3, [5, 5], stride=2, padding='SAME', activation_fn=tf.nn.tanh)
+        return net
+
+    def simple2(self, inputs):
+        # encoder
+        # 256x256x3 -> 128x128x64 -> 64x64x32 -> 32x32x16 -> 16x16x8 -> 8x8x4 -> 2x2x2
+        net = lays.conv2d(inputs, 64, [5, 5], stride=2, padding='SAME')
+        net = lays.conv2d(net, 32, [5, 5], stride=2, padding='SAME')
+        net = lays.conv2d(net, 16, [5, 5], stride=2, padding='SAME')
+        net = lays.conv2d(net, 8, [5, 5], stride=2, padding='SAME')
+        net = lays.conv2d(net, 4, [5, 5], stride=2, padding='SAME')
+        net = lays.conv2d(net, 2, [5, 5], stride=4, padding='SAME')
+        # decoder
+        # 2x2x2 -> 8x8x4 -> 16x16x8 -> 32x32x16 -> 64x64x32 -> 128x128x64 -> 256x256x3
+        net = lays.conv2d_transpose(net, 4, [5, 5], stride=4, padding='SAME')
+        net = lays.conv2d_transpose(net, 8, [5, 5], stride=2, padding='SAME')
+        net = lays.conv2d_transpose(net, 16, [5, 5], stride=2, padding='SAME')
+        net = lays.conv2d_transpose(net, 32, [5, 5], stride=2, padding='SAME')
+        net = lays.conv2d_transpose(net, 64, [5, 5], stride=2, padding='SAME')
+        net = lays.conv2d_transpose(net, 3, [5, 5], stride=2, padding='SAME', activation_fn=tf.nn.tanh)
+        return net
+
+    def fully_connected(self, input_layer):
+        # encoder
+        n_nodes_inpl = 784
+        n_nodes_hl1 = 32
+        # decoder
+        n_nodes_hl2 = 32
+        n_nodes_outl = 784
+
+        # first hidden layer has 784*32 weights and 32 biases
+        hidden_1_layer_vals = {
+            'weights':tf.Variable(tf.random_normal([n_nodes_inpl,n_nodes_hl1])),
+            'biases':tf.Variable(tf.random_normal([n_nodes_hl1]))}
+        # second hidden layer has 32*32 weights and 32 biases
+        hidden_2_layer_vals = {
+            'weights':tf.Variable(tf.random_normal([n_nodes_hl1,n_nodes_hl2])),
+            'biases':tf.Variable(tf.random_normal([n_nodes_hl2]))}
+        # second hidden layer has 32*784 weights and 784 biases
+        output_layer_vals = {
+            'weights':tf.Variable(tf.random_normal([n_nodes_hl2, n_nodes_outl])),
+            'biases':tf.Variable(tf.random_normal([n_nodes_outl]))}
+
+        # image with shape 784 goes in
+
+        # multiply output of input_layer wth a weight matrix and add biases
+        layer_1 = tf.nn.sigmoid(
+            tf.add(tf.matmul(input_layer,hidden_1_layer_vals['weights']),hidden_1_layer_vals['biases']))
+        # multiply output of layer_1 wth a weight matrix and add biases
+        layer_2 = tf.nn.sigmoid(
+            tf.add(tf.matmul(layer_1,hidden_2_layer_vals['weights']),hidden_2_layer_vals['biases']))
+        # multiply output of layer_2 wth a weight matrix and add biases
+        output_layer = tf.matmul(layer_2,output_layer_vals['weights']) + output_layer_vals['biases']
+
+        return output_layer
+
+
 class FusionNet(object):
     def __init__(self):
         self.act_fn = acts.pRelu
@@ -110,84 +196,4 @@ class FusionNet(object):
 
         print("Completed!!")
 
-        return output    
-
-
-class Network():
-
-    training = tf.placeholder(tf.bool)
-
-    def __init__(self):
-        pass
-
-    def build(self, input_batch):
-        new_input = tf.reshape(input_batch, [-1, 128, 128, 3])
-        fusionNet = FusionNet()
-        out = fusionNet.inference(new_input)
-        print("out:", out.shape)
-        return tf.reshape(out,[-1,128,128,3])
-    
-    def autoencoder(self, inputs):
-        # # encoder
-        # # 512 x 512 x 1  ->  256 x 256 x 64  ->  128 x 128 x 32  ->  64 x 64 x 16  ->  16 x 16 x 8
-        # net = lays.conv2d(inputs, 64, [5, 5], stride=2, padding='SAME')
-        # net = lays.conv2d(net, 32, [5, 5], stride=2, padding='SAME')
-        # net = lays.conv2d(net, 16, [5, 5], stride=2, padding='SAME')
-        # net = lays.conv2d(net, 8, [5, 5], stride=4, padding='SAME')
-        # # decoder
-        # # 16 x 16 x 8  ->  64 x 64 x 16  ->  128 x 128 x 32  ->  256 x 256 x 64  ->  512 x 512 x 1
-        # net = lays.conv2d_transpose(net, 16, [5, 5], stride=4, padding='SAME')
-        # net = lays.conv2d_transpose(net, 32, [5, 5], stride=2, padding='SAME')
-        # net = lays.conv2d_transpose(net, 64, [5, 5], stride=2, padding='SAME')
-        # net = lays.conv2d_transpose(net, 1, [5, 5], stride=2, padding='SAME', activation_fn=tf.nn.tanh)
-
-        # encoder
-        # 128 x 128 x 3  ->  64 x 64 x 32  ->  32 x 32 x 16  ->  16 x 16 x 8 ->  8 x 8 x 4 -> 2 x 2 x 2
-        net = lays.conv2d(inputs, 32, [5, 5], stride=2, padding='SAME')
-        net = lays.conv2d(net, 16, [5, 5], stride=2, padding='SAME')
-        net = lays.conv2d(net, 8, [5, 5], stride=2, padding='SAME')
-        net = lays.conv2d(net, 4, [5, 5], stride=2, padding='SAME')
-        net = lays.conv2d(net, 2, [5, 5], stride=4, padding='SAME')
-        # decoder
-        # 2 x 2 x 2  ->  8 x 8 x 4  ->  16 x 16 x 8  ->  32 x 32 x 16  ->  64 x 64 x 32  ->  128 x 128 x 3
-        net = lays.conv2d_transpose(net, 4, [5, 5], stride=4, padding='SAME')
-        net = lays.conv2d_transpose(net, 8, [5, 5], stride=2, padding='SAME')
-        net = lays.conv2d_transpose(net, 16, [5, 5], stride=2, padding='SAME')
-        net = lays.conv2d_transpose(net, 32, [5, 5], stride=2, padding='SAME')
-        net = lays.conv2d_transpose(net, 3, [5, 5], stride=2, padding='SAME', activation_fn=tf.nn.tanh)
-
-        return net
-
-    def autoencoder2(self, input_layer):
-        # encoder
-        n_nodes_inpl = 784
-        n_nodes_hl1 = 32
-        # decoder
-        n_nodes_hl2 = 32
-        n_nodes_outl = 784
-
-        # first hidden layer has 784*32 weights and 32 biases
-        hidden_1_layer_vals = {
-            'weights':tf.Variable(tf.random_normal([n_nodes_inpl,n_nodes_hl1])),
-            'biases':tf.Variable(tf.random_normal([n_nodes_hl1]))}
-        # second hidden layer has 32*32 weights and 32 biases
-        hidden_2_layer_vals = {
-            'weights':tf.Variable(tf.random_normal([n_nodes_hl1,n_nodes_hl2])),
-            'biases':tf.Variable(tf.random_normal([n_nodes_hl2]))}
-        # second hidden layer has 32*784 weights and 784 biases
-        output_layer_vals = {
-            'weights':tf.Variable(tf.random_normal([n_nodes_hl2,n_nodes_outl])),
-            'biases':tf.Variable(tf.random_normal([n_nodes_outl]))}
-
-        # image with shape 784 goes in
-
-        # multiply output of input_layer wth a weight matrix and add biases
-        layer_1 = tf.nn.sigmoid(
-            tf.add(tf.matmul(input_layer,hidden_1_layer_vals['weights']),hidden_1_layer_vals['biases']))
-        # multiply output of layer_1 wth a weight matrix and add biases
-        layer_2 = tf.nn.sigmoid(
-            tf.add(tf.matmul(layer_1,hidden_2_layer_vals['weights']),hidden_2_layer_vals['biases']))
-        # multiply output of layer_2 wth a weight matrix and add biases
-        output_layer = tf.matmul(layer_2,output_layer_vals['weights']) + output_layer_vals['biases']
-
-        return output_layer
+        return output

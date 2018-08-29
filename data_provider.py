@@ -9,12 +9,10 @@ import time
 
 class DataProvider:
 
-    def __init__(self, video_name):
+    def __init__(self, video_name, img_sz):
 
         # self.config = config
         self.feed_path = "Data"
-        n_channels = 3
-        image_sz = 128
 
         # load data from video
         #makedir(self.feed_path)
@@ -32,7 +30,7 @@ class DataProvider:
         for img_str in files:
             I = cv2.imread(img_str)
             I = cv2.cvtColor(I, cv2.COLOR_BGR2RGB)
-            I = cv2.resize(I, (128, 128))  # change to (512, 512)
+            I = cv2.resize(I, (img_sz, img_sz))  # change to (512, 512)
             I = I / 255.
             I = np.atleast_3d(I)
             if count <= self.train_size:
