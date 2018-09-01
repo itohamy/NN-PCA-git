@@ -15,9 +15,9 @@ class DataProvider:
         self.feed_path = "Data"
 
         # load data from video
-        #makedir(self.feed_path)
-        #feed_size = extractImages(video_name, self.feed_path)
-        feed_size = 8900
+        makedir(self.feed_path)
+        feed_size = extractImages(video_name, self.feed_path)
+        #feed_size = 8900
 
         self.train_size = int(0.8 * feed_size)
         self.test_size = feed_size - self.train_size
@@ -30,7 +30,7 @@ class DataProvider:
         for img_str in files:
             I = cv2.imread(img_str)
             I = cv2.cvtColor(I, cv2.COLOR_BGR2RGB)
-            I = cv2.resize(I, (img_sz, img_sz))  # change to (512, 512)
+            I = cv2.resize(I, (img_sz, img_sz))
             I = I / 255.
             I = np.atleast_3d(I)
             if count <= self.train_size:

@@ -14,14 +14,14 @@ class Network():
         self.img_sz = img_sz
         pass
 
-    def unet(self, input_batch):
+    def fusion(self, input_batch):
         new_input = tf.reshape(input_batch, [-1, self.img_sz, self.img_sz, 3])
         fusionNet = FusionNet()
         out = fusionNet.inference(new_input)
         print("out:", out.shape)
         return tf.reshape(out, [-1, self.img_sz, self.img_sz, 3])
 
-    def simple1(self, inputs):
+    def simple1(self, inputs):  # 128x128 only
         # encoder
         # 128 x 128 x 3  ->  64 x 64 x 32  ->  32 x 32 x 16  ->  16 x 16 x 8 ->  8 x 8 x 4 -> 2 x 2 x 2
         net = lays.conv2d(inputs, 32, [5, 5], stride=2, padding='SAME')
@@ -38,7 +38,7 @@ class Network():
         net = lays.conv2d_transpose(net, 3, [5, 5], stride=2, padding='SAME', activation_fn=tf.nn.tanh)
         return net
 
-    def simple2(self, inputs):
+    def simple2(self, inputs):  # 256x256 only
         # encoder
         # 256x256x3 -> 128x128x64 -> 64x64x32 -> 32x32x16 -> 16x16x8 -> 8x8x4 -> 2x2x2
         net = lays.conv2d(inputs, 64, [5, 5], stride=2, padding='SAME')
@@ -57,7 +57,7 @@ class Network():
         net = lays.conv2d_transpose(net, 3, [5, 5], stride=2, padding='SAME', activation_fn=tf.nn.tanh)
         return net
 
-    def fully_connected(self, input_layer):
+    def fully_connected(self, input_layer): # 128x128 only
         # encoder
         n_nodes_inpl = 784
         n_nodes_hl1 = 32
@@ -133,6 +133,10 @@ class FusionNet(object):
         self.down4 = self.conv_res_conv_block(pool3, 4, name="down4")
         pool4 = layers.max_pool(self.down4, name="pool4")
 
+        self.down5 = self.conv_res_conv_block(pool4, 2, name="down5")
+        pool5 = layers.max_pool(self.down5, name="pool5")
+
+
         if self.log == 1:
             print("encoder input : ", input_.get_shape())
             print("conv1 : ", self.down1.get_shape())
@@ -143,12 +147,18 @@ class FusionNet(object):
             print("pool3 : ", pool3.get_shape())
             print("conv4 : ", self.down4.get_shape())
             print("pool4 : ", pool4.get_shape())
+            print("conv5 : ", self.down5.get_shape())
+            print("pool5 : ", pool5.get_shape())
 
-        return pool4
+        return pool5
 
     def decoder(self, input_):
+        conv_trans5 = layers.conv2dTrans_same_act(input_, self.down5.get_shape(),
+                                                  activation_fn=self.act_fn, with_logit=False, name="unpool5")
+        res5 = self.skip_connection(conv_trans5, self.down5)
+        up5 = self.conv_res_conv_block(res5, 2, name="up5")
 
-        conv_trans4 = layers.conv2dTrans_same_act(input_, self.down4.get_shape(),
+        conv_trans4 = layers.conv2dTrans_same_act(up5, self.down4.get_shape(),
                                                   activation_fn=self.act_fn, with_logit=False, name="unpool4")
         res4 = self.skip_connection(conv_trans4, self.down4)
         up4 = self.conv_res_conv_block(res4, 4, name="up4")
@@ -169,19 +179,22 @@ class FusionNet(object):
         up1 = self.conv_res_conv_block(res1, 32, name="up1")
 
         if self.log == 1:
-            print("dncoder input : ", input_.get_shape())
-            print("convT1 : ", conv_trans4.get_shape())
-            print("res1 : ", res4.get_shape())
-            print("up1 : ", up4.get_shape())
-            print("convT2 : ", conv_trans3.get_shape())
-            print("res2 : ", res3.get_shape())
-            print("up2 : ", up3.get_shape())
-            print("convT3 : ", conv_trans2.get_shape())
-            print("res3 : ", res2.get_shape())
-            print("up3 : ", up2.get_shape())
-            print("convT4 : ", conv_trans1.get_shape())
-            print("res4 : ", res1.get_shape())
-            print("up4 : ", up1.get_shape())
+            print("dncoder input : ",input_.get_shape())
+            print("convT1 : ", conv_trans5.get_shape())
+            print("res1 : ", res5.get_shape())
+            print("up1 : ", up5.get_shape())
+            print("convT2 : ", conv_trans4.get_shape())
+            print("res2 : ", res4.get_shape())
+            print("up2 : ", up4.get_shape())
+            print("convT3 : ", conv_trans3.get_shape())
+            print("res3 : ", res3.get_shape())
+            print("up3 : ", up3.get_shape())
+            print("convT4 : ", conv_trans2.get_shape())
+            print("res4 : ", res2.get_shape())
+            print("up4 : ", up2.get_shape())
+            print("convT5 : ", conv_trans1.get_shape())
+            print("res5 : ", res1.get_shape())
+            print("up5 : ", up1.get_shape())
 
         return up1
 

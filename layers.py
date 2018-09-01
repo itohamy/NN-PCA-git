@@ -194,3 +194,8 @@ def eval(logits, labels, top=1):
 def max_pool(input_, k_h=2, k_w=2, d_h=2, d_w=2, padding='VALID', name="pool"):
     with tf.name_scope(name):
         return tf.nn.max_pool(input_, ksize=[1, k_h, k_w, 1], strides=[1, d_h, d_w, 1], padding=padding)
+
+
+def max_pool2(input_, k_h=2, k_w=2, d_h=4, d_w=4, padding='VALID', name="pool"):
+    with tf.name_scope(name):
+        return tf.nn.max_pool(input_, ksize=[1, k_h, k_w, 1], strides=[1, d_h, d_w, 1], padding=padding)
