@@ -10,16 +10,17 @@ class Network():
 
     training = tf.placeholder(tf.bool)
 
-    def __init__(self, img_sz):
+    def __init__(self, img_sz, d_sz):
         self.img_sz = img_sz
+        self.d_sz = d_sz
         pass
 
     def fusion(self, input_batch):
-        new_input = tf.reshape(input_batch, [-1, self.img_sz, self.img_sz, 3])
+        new_input = tf.reshape(input_batch, [-1, self.img_sz, self.img_sz, self.d_sz])
         fusionNet = FusionNet()
         out = fusionNet.inference(new_input)
         print("out:", out.shape)
-        return tf.reshape(out, [-1, self.img_sz, self.img_sz, 3])
+        return tf.reshape(out, [-1, self.img_sz, self.img_sz, self.d_sz])
 
     def simple1(self, inputs):  # 128x128 only
         # encoder
@@ -35,7 +36,7 @@ class Network():
         net = lays.conv2d_transpose(net, 8, [5, 5], stride=2, padding='SAME')
         net = lays.conv2d_transpose(net, 16, [5, 5], stride=2, padding='SAME')
         net = lays.conv2d_transpose(net, 32, [5, 5], stride=2, padding='SAME')
-        net = lays.conv2d_transpose(net, 3, [5, 5], stride=2, padding='SAME', activation_fn=tf.nn.tanh)
+        net = lays.conv2d_transpose(net, self.d_sz, [5, 5], stride=2, padding='SAME', activation_fn=tf.nn.tanh)
         return net
 
     def simple2(self, inputs):  # 256x256 only
@@ -54,7 +55,7 @@ class Network():
         net = lays.conv2d_transpose(net, 16, [5, 5], stride=2, padding='SAME')
         net = lays.conv2d_transpose(net, 32, [5, 5], stride=2, padding='SAME')
         net = lays.conv2d_transpose(net, 64, [5, 5], stride=2, padding='SAME')
-        net = lays.conv2d_transpose(net, 3, [5, 5], stride=2, padding='SAME', activation_fn=tf.nn.tanh)
+        net = lays.conv2d_transpose(net, self.d_sz, [5, 5], stride=2, padding='SAME', activation_fn=tf.nn.tanh)
         return net
 
     def vae(self, input_layer):

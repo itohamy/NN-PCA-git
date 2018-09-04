@@ -10,8 +10,9 @@ class Network():
 
     training = tf.placeholder(tf.bool)
 
-    def __init__(self, img_sz):
+    def __init__(self, img_sz, d_sz):
         self.img_sz = img_sz
+        self.d_sz = d_sz
         pass
 
     def encoder(self, x, latent_dim):  # 128x128 only
@@ -36,7 +37,7 @@ class Network():
         x = lays.conv2d_transpose(x, 8, [5, 5], stride=4, padding='SAME')
         x = lays.conv2d_transpose(x, 16, [5, 5], stride=2, padding='SAME')
         x = lays.conv2d_transpose(x, 32, [5, 5], stride=2, padding='SAME')
-        x = lays.conv2d_transpose(x, 3, [5, 5], stride=2, padding='SAME', activation_fn=tf.nn.tanh) # activation_fn=tf.nn.tanh
+        x = lays.conv2d_transpose(x, self.d_sz, [5, 5], stride=2, padding='SAME', activation_fn=tf.nn.tanh) # activation_fn=tf.nn.tanh
         #x = layers.flatten(x)
         return x
 

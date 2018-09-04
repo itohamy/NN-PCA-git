@@ -14,6 +14,7 @@ epoch_num = 1    # Number of epochs to train the network
 lr = 0.001        # Learning rate
 iterations = 100
 img_sz = 128  # This is the panorama size
+d_sz = 3 # depth dim of the image
 
 def train():
 
@@ -25,7 +26,7 @@ def train():
     device = '/cpu:0' # '/gpu:0'  OR  '/cpu:0'
     with tf.device(device):
         # build the network
-        vae = VAE(latent_dim, batch_size, img_sz)
+        vae = VAE(latent_dim, batch_size, img_sz, d_sz)
 
     for ep in range(epoch_num):  # epochs loop
         for i in range(iterations):  # batches loop
@@ -37,25 +38,26 @@ def train():
 
     # # test the trained network
     batch_img = data.next_batch(batch_size, 'test')
-    vae.test(batch_img)
-    # test_results = sess.run([ae_outputs], feed_dict={ae_inputs: batch_img})[0]
-    #
+    batch_img[4, ...] = generate_outliers(batch_img[4,...],50,80)
+    batch_img[7, ...] = generate_outliers(batch_img[7,...],40,110)
+    test_results = vae.test(batch_img)[0]
+
     # # plot the reconstructed images and their ground truths (inputs)
-    # imgs = []
-    # imgs_test = []
-    # titles = []
-    #
-    # for i in range(10):
-    #     imgs.append(batch_img[i, ...])
-    #     imgs_test.append(np.abs(test_results[i, ...]))
-    #     titles.append('')
-    # fig1 = open_figure(1, 'Original Images', (7, 3))
-    # PlotImages(1, 2, 5, 1, imgs, titles, 'gray', axis=True, colorbar=False)
-    # fig2 = open_figure(2, 'Test Results', (7, 3))
-    # PlotImages(2, 2, 5, 1, imgs_test, titles, 'gray', axis=True, colorbar=False)
-    # plt.show()
-    # fig1.savefig('f1.png')
-    # fig2.savefig('f2.png')
+    imgs = []
+    imgs_test = []
+    titles = []
+
+    for i in range(10):
+        imgs.append(batch_img[i, ...])
+        imgs_test.append(np.abs(test_results[i, ...]))
+        titles.append('')
+    fig1 = open_figure(1, 'Original Images', (7, 3))
+    PlotImages(1, 2, 5, 1, imgs, titles, 'gray', axis=True, colorbar=False)
+    fig2 = open_figure(2, 'Test Results', (7, 3))
+    PlotImages(2, 2, 5, 1, imgs_test, titles, 'gray', axis=True, colorbar=False)
+    plt.show()
+    fig1.savefig('f1.png')
+    fig2.savefig('f2.png')
 
 
 # Use STN

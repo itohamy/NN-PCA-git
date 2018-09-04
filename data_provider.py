@@ -9,6 +9,8 @@ import time
 import tensorflow as tf
 from astropy.visualization import (MinMaxInterval, SqrtStretch,
                                    ImageNormalize)
+from tensorflow.examples.tutorials.mnist import input_data
+
 
 class DataProvider:
 
@@ -19,7 +21,7 @@ class DataProvider:
 
         # load data from video
         #makedir(self.feed_path)
-        feed_size = extractImages(video_name, self.feed_path)
+        #feed_size = extractImages(video_name, self.feed_path)
         feed_size = 189 #8900
 
         self.train_size = int(0.8 * feed_size)
@@ -40,15 +42,8 @@ class DataProvider:
             if count <= self.train_size:
                 self.train.append(I)
             else:
-                pass #self.test.append(I)
+                self.test.append(I)
             count += 1
-
-        I_test = cv2.imread("Data2/test.jpg")
-        I_test = cv2.cvtColor(I_test,cv2.COLOR_BGR2RGB)
-        I_test = cv2.resize(I_test,(img_sz,img_sz))
-        I_test = I_test / 255.
-        I_test = np.atleast_3d(I_test)
-        self.test.append(I_test)
 
         self.train = np.array(self.train)
         self.test = np.array(self.test)

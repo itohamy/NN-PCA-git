@@ -11,6 +11,8 @@ epoch_num = 1    # Number of epochs to train the network
 lr = 0.001        # Learning rate
 iterations = 2
 img_sz = 128  # This is the panorama size
+d_sz = 3
+
 
 def train():
 
@@ -25,14 +27,14 @@ def train():
     device = '/cpu:0' # '/gpu:0'  OR  '/cpu:0'
     with tf.device(device):
         # build the network
-        net = Network(img_sz)
+        net = Network(img_sz, d_sz)
 
         # calculate the number of batches per epoch
         # batch_per_ep = data.train_size // batch_size
         # print('Data size: ', data.train_size, ' Num of epochs: ', epoch_num, ' Batches per epoch: ', batch_per_ep)
 
         ae_inputs = tf.placeholder(tf.float32, (batch_size, img_sz, img_sz, 3))  # input to the network
-        ae_outputs = net.fusion(ae_inputs) # fusion , simple1 , simple2, vae, fully_connected
+        ae_outputs = net.simple1(ae_inputs) # fusion , simple1 , simple2, vae, fully_connected
 
         # calculate the loss and optimize the network
         loss = tf.reduce_mean(tf.square(ae_outputs - ae_inputs))  # claculate the mean square error loss
@@ -54,7 +56,6 @@ def train():
 
         # test the trained network
         batch_img = data.next_batch(batch_size, 'train')
-        batch_img[0, ...] = data.next_batch(1, 'test')[0]
         #batch_img[4, ...] = generate_outliers(batch_img[4,...],50,80)
         # batch_img[7, ...] = generate_outliers(batch_img[7,...],40,110)
         test_results = sess.run([ae_outputs], feed_dict={ae_inputs: batch_img})[0]

@@ -7,7 +7,7 @@ from tensorflow.contrib.framework import arg_scope
 
 class VAE:
 
-    def __init__(self, latent_dim, batch_size, img_sz):
+    def __init__(self, latent_dim, batch_size, img_sz, d_sz):
         """
         Implementation of Variational Autoencoder (VAE) for  MNIST.
         Paper (Kingma & Welling): https://arxiv.org/abs/1312.6114.
@@ -19,6 +19,7 @@ class VAE:
         self._latent_dim = latent_dim
         self._batch_size = batch_size
         self._img_sz = img_sz
+        self._d_sz = d_sz
         self._build_graph()
 
     def _build_graph(self):
@@ -28,10 +29,10 @@ class VAE:
         z -> decode(z) -> distribution over x -> log likelihood ->
         total loss -> train step
         """
-        network = Network(self._img_sz)
+        network = Network(self._img_sz, self._d_sz)
         with tf.variable_scope('vae'):
             # placeholder for MNIST inputs
-            self.x = tf.placeholder(tf.float32, (self._batch_size, self._img_sz, self._img_sz, 3))
+            self.x = tf.placeholder(tf.float32, (self._batch_size, self._img_sz, self._img_sz, self._d_sz))
 
             # encode inputs (map to parameterization of diagonal Gaussian)
             with tf.variable_scope('encoder'):
@@ -64,15 +65,15 @@ class VAE:
                 # calculate KL divergence between approximate posterior q and prior p
                 with tf.variable_scope('kl-divergence'):
                     kl = self._kl_diagnormal_stdnormal(self.mean, self.stddev)
-
                 # calculate reconstruction error between decoded sample
                 # and original input batch
-                x_ = layers.flatten(self.x)
-                decoded_ = layers.flatten(self.decoded)
+                #x_ = layers.flatten(self.x)
+                #decoded_ = layers.flatten(self.decoded)
                 with tf.variable_scope('log-likelihood'):
-                    log_like = self._bernoulli_log_likelihood(x_, decoded_)
+                    recon_loss = self._reconstruction_loss(self.x, self.decoded)
+                    #recon_loss = tf.Print(recon_loss, [recon_loss], message="log_like is a: ")
 
-                self._loss = (kl + log_like) / self._batch_size
+                self._loss = (kl + recon_loss) / self._batch_size
 
             with tf.variable_scope('optimizer'):
                 optimizer = tf.train.AdamOptimizer(learning_rate=2e-4)
@@ -80,7 +81,7 @@ class VAE:
                 self._train = optimizer.minimize(self._loss)
 
             # start tensorflow session
-            self._sesh = tf.Session()
+            self._sesh = tf.InteractiveSession() #tf.Session()
             init = tf.global_variables_initializer()
             self._sesh.run(init)
 
@@ -111,9 +112,21 @@ class VAE:
         :param outputs: Probability distribution over outputs.
         :return: log_like: -log(p(x|z)) (negative log likelihood)
         """
+        targets = tf.Print(targets,[targets],message="targets is a: ")
+        outputs = tf.Print(outputs,[outputs],message="outputs is a: ")
         log_like = -tf.reduce_sum(targets * tf.log(outputs + eps)
                                   + (1. - targets) * tf.log((1. - outputs) + eps))
         return log_like
+
+    @staticmethod
+    def _reconstruction_loss(targets, outputs):
+        """
+        Calculates reconstruction loss
+        """
+        #targets = tf.Print(targets,[targets],message="targets is a: ")
+        #outputs = tf.Print(outputs,[outputs],message="outputs is a: ")
+        recon_loss = tf.reduce_mean(tf.square(targets - outputs))
+        return recon_loss
 
     def update(self, x):
         """
