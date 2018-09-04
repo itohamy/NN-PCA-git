@@ -39,8 +39,9 @@ class DataProvider:
                 crop = crop / 255.
                 # generate outliers in a low probability:
                 r = random.uniform(0, 1)
-                if r >= 0.80:
-                    crop = generate_outliers(crop, 20, 40)
+                if r >= 0.70:
+                    r2 = int(random.uniform(0, 1)*(crop_size/2))
+                    crop = generate_outliers(crop, r2, r2+30)
                 img = np.zeros((img_sz, img_sz, 3))  # prepare the embedded image here just for testing
                 img[s_idx:s_idx+crop_size, j:j+crop_size, :] = crop
                 self.train.append(img)

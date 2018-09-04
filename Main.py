@@ -1,6 +1,6 @@
 # An undercomplete autoencoder on MNIST dataset
 from __future__ import division, print_function, absolute_import
-from data_provider2 import DataProvider
+from data_provider import DataProvider
 import tensorflow as tf
 import numpy as np
 import matplotlib.pyplot as plt
@@ -9,7 +9,7 @@ from Network import Network
 batch_size = 64  # Number of samples in each batch
 epoch_num = 1    # Number of epochs to train the network
 lr = 0.001        # Learning rate
-iterations = 20
+iterations = 2
 img_sz = 128  # This is the panorama size
 
 def train():
@@ -17,6 +17,7 @@ def train():
     # Load data (frames) from video - generate embedded frames of size: (img_sz x img_sz x 4)
     video_name = "movies/BG.mp4"
     data = DataProvider(video_name, img_sz)
+
     # STN - align the frames to the right position in the panorama
     # align_frames(data)
 
@@ -31,7 +32,7 @@ def train():
         # print('Data size: ', data.train_size, ' Num of epochs: ', epoch_num, ' Batches per epoch: ', batch_per_ep)
 
         ae_inputs = tf.placeholder(tf.float32, (batch_size, img_sz, img_sz, 3))  # input to the network
-        ae_outputs = net.simple1(ae_inputs) # fully_connected , fusion , simple1 , simple2
+        ae_outputs = net.fusion(ae_inputs) # fusion , simple1 , simple2, vae, fully_connected
 
         # calculate the loss and optimize the network
         loss = tf.reduce_mean(tf.square(ae_outputs - ae_inputs))  # claculate the mean square error loss
@@ -52,9 +53,9 @@ def train():
                     print('Epoch {0}: Iteration: {1} Loss: {2:.5f}'.format((ep + 1), i, c))
 
         # test the trained network
-        batch_img = data.next_batch(batch_size, 'test')
-        batch_img[0, ...] = generate_outliers(batch_img[0,...], 20, 40)
-        batch_img[4, ...] = generate_outliers(batch_img[4,...],50,80)
+        batch_img = data.next_batch(batch_size, 'train')
+        batch_img[0, ...] = data.next_batch(1, 'test')[0]
+        #batch_img[4, ...] = generate_outliers(batch_img[4,...],50,80)
         # batch_img[7, ...] = generate_outliers(batch_img[7,...],40,110)
         test_results = sess.run([ae_outputs], feed_dict={ae_inputs: batch_img})[0]
 
