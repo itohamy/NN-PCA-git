@@ -9,7 +9,7 @@ from Network import Network
 batch_size = 64  # Number of samples in each batch
 epoch_num = 1    # Number of epochs to train the network
 lr = 0.001        # Learning rate
-iterations = 2
+iterations = 50
 img_sz = 128  # This is the panorama size
 d_sz = 3
 

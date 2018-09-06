@@ -11,8 +11,8 @@ from vae import VAE
 batch_size = 64  # Number of samples in each batch
 latent_dim = 6
 epoch_num = 1    # Number of epochs to train the network
-lr = 0.001        # Learning rate
-iterations = 100
+lr = 0.0001        # Learning rate
+iterations = 1000
 img_sz = 128  # This is the panorama size
 d_sz = 3 # depth dim of the image
 
@@ -32,9 +32,9 @@ def train():
         for i in range(iterations):  # batches loop
             # read a batch -> batch_img
             batch_img = data.next_batch(batch_size, 'train')
-            loss = vae.update(batch_img)
+            loss, kl, recon_loss = vae.update(batch_img)
             if not i % 10:
-                print('Epoch {0}: Iteration: {1} Loss: {2:.5f}'.format((ep + 1), i, loss))
+                print('Epoch {0}: Iteration: {1} Loss: {2:.5f}  kl: {3:.5f}  recon_loss: {4:.5f}'.format((ep + 1), i, loss, kl, recon_loss))
 
     # # test the trained network
     batch_img = data.next_batch(batch_size, 'test')
